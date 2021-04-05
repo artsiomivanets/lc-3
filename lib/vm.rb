@@ -1,0 +1,5 @@
+require 'vm/version'
+require 'vm/assembly'
+require 'vm/memory'
+require 'vm/registers'
+require 'vm/main'
