@@ -1,4 +1,5 @@
 require 'vm/version'
+require 'vm/helpers'
 require 'vm/assembly'
 require 'vm/memory'
 require 'vm/registers'

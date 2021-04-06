@@ -52,6 +52,6 @@ class VMTest < Minitest::Test
     vm.run
     registers = vm.registers
 
-    assert { registers[:R0] == 0xFFF0 }
+    assert { registers[:R0] == -16 }
   end
 end

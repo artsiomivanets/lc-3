@@ -24,6 +24,10 @@ module VM
       when 'NOT'
         op, dr, sr = instruction.split(' ').map { |w| w2b(w) }
         "#{op}#{dr}#{sr}#{'1' * 6}"
+      when /BR/
+        op, offset = instruction.split(' ').map { |w| w2b(w) }
+        condition = operator.gsub(/./, 'n' => '100', 'z' => '010', 'p' => '001')
+        "#{op}#{condition}#{format('%09b', offset.to_i(2))}"
       end
     end
 
@@ -35,6 +39,8 @@ module VM
         '0101'
       when /NOT/
         '1001'
+      when /BR/
+        '0000'
       when /R\d/
         format('%03b', word.chars[1].to_i)
       when /\$\d/

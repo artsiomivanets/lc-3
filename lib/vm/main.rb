@@ -1,8 +1,10 @@
 module VM
   PROGRAM_ADDRESS = 0x0
   MEMORY_ADDRESS_SPACE = 2**4
+  WORD_LENGTH = 2**4
 
   class Main
+    include VM::Helpers
     attr_accessor :memory, :registers
 
     def initialize(registers:, data:)
@@ -30,13 +32,17 @@ module VM
           immediate: {
             pattern: /(...)(...)(.)(.....)/,
             perform: lambda do |dr, sr1, _, sr2|
-              registers[dr] = registers[sr1] + sr2
+              value = to_signed(registers[sr1] + sr2)
+              registers[dr] = value
+              set_condition_registers!(value)
             end
           },
           literal: {
             pattern: /(...)(...)(...)(...)/,
             perform: lambda do |dr, sr1, _, sr2|
-              registers[dr] = registers[sr1] + registers[sr2]
+              value = to_signed(registers[sr1] + registers[sr2])
+              registers[dr] = value
+              set_condition_registers!(value)
             end
           }
         },
@@ -44,22 +50,26 @@ module VM
           immediate: {
             pattern: /(...)(...)(.)(.....)/,
             perform: lambda do |dr, sr1, _, sr2|
-              registers[dr] = registers[sr1] & sr2
+              value = to_signed(registers[sr1] & sr2)
+              registers[dr] = value
+              set_condition_registers!(value)
             end
           },
           literal: {
             pattern: /(...)(...)(...)(...)/,
             perform: lambda do |dr, sr1, _, sr2|
-              registers[dr] = registers[sr1] & registers[sr2]
+              value = to_signed(registers[sr1] & registers[sr2])
+              registers[dr] = value
+              set_condition_registers!(value)
             end
           }
         },
         not: {
           pattern: /(...)(...)/,
           perform: lambda do |dr, sr, *_other|
-            val = registers[sr]
-            result = (MEMORY_ADDRESS_SPACE - 1).downto(0).map { |n| (~val)[n] }.join.to_i(2)
-            registers[dr] = result
+            value = to_signed((WORD_LENGTH - 1).downto(0).map { |n| (~registers[sr])[n] }.join.to_i(2))
+            registers[dr] = to_signed(value)
+            set_condition_registers!(value)
           end
         }
       }
@@ -108,6 +118,12 @@ module VM
 
     def addressing_mode(data)
       data[6].to_i(2).zero? ? :literal : :immediate
+    end
+
+    def set_condition_registers!(v)
+      registers.set!({ N: 1, Z: 0, P: 0 }) if v.negative?
+      registers.set!({ N: 0, Z: 1, P: 0 }) if v.zero?
+      registers.set!({ N: 0, Z: 0, P: 1 }) if v.positive?
     end
 
     def extract_arguments(str, pattern)

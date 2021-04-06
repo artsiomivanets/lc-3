@@ -1,5 +1,6 @@
 module VM
   class Registers
+    include VM::Helpers
     def initialize(default)
       @registers = {
         R0: 0,
@@ -11,6 +12,9 @@ module VM
         R6: 0,
         R7: 0,
         PC: 0,
+        N: 0,
+        Z: 0,
+        P: 0,
         IR: 0
       }.merge(default)
     end
@@ -20,7 +24,12 @@ module VM
     end
 
     def []=(k, v)
-      @registers[transform(k)] = v
+      register_name = transform(k)
+      @registers[register_name] = v
+    end
+
+    def set!(values)
+      @registers.merge!(values)
     end
 
     private
